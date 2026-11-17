@@ -310,9 +310,13 @@ async function collectAutomationHealth(
     timezone: await page.evaluate(
       () => Intl.DateTimeFormat().resolvedOptions().timeZone,
     ),
-    viewport: config.headless
-      ? { width: 1440, height: 1000 }
-      : { width: 1440, height: 1000 },
+    // With a maximized window there is no fixed viewport, so measure the page.
+    viewport:
+      page.viewportSize() ??
+      (await page.evaluate(() => ({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      }))),
     browserVersion: await page.evaluate(() => {
       const match = navigator.userAgent.match(/Chrome\/([\d.]+)/);
       return match?.[1] ?? "unknown";

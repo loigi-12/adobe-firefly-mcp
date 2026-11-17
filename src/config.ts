@@ -22,6 +22,16 @@ export interface SelectorOverrides {
   uploadButton?: string;
 }
 
+/**
+ * Browser window size. "maximized" opens the window maximized and lets the page
+ * fill it (headless runs use 1920x1080 instead). "fixed" uses an exact size.
+ */
+export type ViewportSetting =
+  { mode: "maximized" } | { height: number; mode: "fixed"; width: number };
+
+/** Size used for headless runs, where there is no window to maximize. */
+export const HEADLESS_VIEWPORT = { height: 1080, width: 1920 } as const;
+
 export interface AppConfig {
   dataDir: string;
   downloadsDir: string;
@@ -37,6 +47,7 @@ export interface AppConfig {
   urls: FireflyUrls;
   usePersistentProfile: boolean;
   userDataDir: string | undefined;
+  viewport: ViewportSetting;
 }
 
 const DEFAULT_OPERATION_TIMEOUT_MS = 180_000;
@@ -113,7 +124,27 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     },
     usePersistentProfile,
     userDataDir,
+    viewport: readViewport(env, "FIREFLY_VIEWPORT"),
   };
+}
+
+/**
+ * FIREFLY_VIEWPORT: "maximized" (default) or an exact size such as "1920x1080".
+ * Anything unrecognised falls back to maximized.
+ */
+export function readViewport(env: NodeJS.ProcessEnv, name: string): ViewportSetting {
+  const value = readString(env, name)?.toLowerCase();
+  const match =
+    value === undefined ? null : /^(\d{3,5})\s*[x×]\s*(\d{3,5})$/u.exec(value);
+  if (match?.[1] !== undefined && match[2] !== undefined) {
+    return {
+      height: Number.parseInt(match[2], 10),
+      mode: "fixed",
+      width: Number.parseInt(match[1], 10),
+    };
+  }
+
+  return { mode: "maximized" };
 }
 
 function readString(env: NodeJS.ProcessEnv, name: string): string | undefined {

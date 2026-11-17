@@ -116,7 +116,12 @@ export async function collectPageInfo(
 
   const browser = context.browser();
   const browserVersion = browser?.version() ?? "unknown";
-  const viewport = page.viewportSize() ?? { height: 0, width: 0 };
+  // With a maximized window there is no fixed viewport, so measure the page.
+  const viewport =
+    page.viewportSize() ??
+    (await page
+      .evaluate(() => ({ height: window.innerHeight, width: window.innerWidth }))
+      .catch(() => ({ height: 0, width: 0 })));
 
   return {
     browserVersion,

@@ -6,10 +6,36 @@ import {
   type Response,
 } from "playwright";
 
-import type { AppConfig } from "./config.js";
+import { HEADLESS_VIEWPORT, type AppConfig, type ViewportSetting } from "./config.js";
 import type { Logger } from "./logger.js";
 import { ensureDirectory } from "./utils/filesystem.js";
 import { RingBuffer } from "./utils/ringBuffer.js";
+
+/**
+ * Window options for launchPersistentContext. Maximized: the window opens
+ * maximized and the page fills it (viewport null), so the whole Firefly page is
+ * visible on any screen. Headless has no window, so it gets a fixed 1920x1080.
+ */
+export function windowOptions(
+  viewport: ViewportSetting,
+  headless: boolean,
+): { args: string[]; viewport: { height: number; width: number } | null } {
+  if (viewport.mode === "fixed") {
+    return {
+      args: [`--window-size=${viewport.width},${viewport.height}`],
+      viewport: { height: viewport.height, width: viewport.width },
+    };
+  }
+
+  if (headless) {
+    return {
+      args: [`--window-size=${HEADLESS_VIEWPORT.width},${HEADLESS_VIEWPORT.height}`],
+      viewport: { ...HEADLESS_VIEWPORT },
+    };
+  }
+
+  return { args: ["--start-maximized"], viewport: null };
+}
 
 export interface BrowserStatus {
   contextLaunches: number;
@@ -226,7 +252,7 @@ export class BrowserManager {
             downloadsPath: this.config.downloadsDir,
             headless: false, // Force headed mode for real Chrome
             slowMo: this.config.launchSlowMoMs,
-            viewport: { height: 1000, width: 1440 },
+            ...windowOptions(this.config.viewport, false),
           },
         );
         this.contextLaunches += 1;
@@ -239,7 +265,7 @@ export class BrowserManager {
         downloadsPath: this.config.downloadsDir,
         headless: this.config.headless,
         slowMo: this.config.launchSlowMoMs,
-        viewport: { height: 1000, width: 1440 },
+        ...windowOptions(this.config.viewport, this.config.headless),
       });
       this.contextLaunches += 1;
       return context;
