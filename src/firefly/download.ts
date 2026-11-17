@@ -27,6 +27,12 @@ export interface DownloadGeneratedImagesOptions {
   basename: string;
   maxFiles: number;
   outputDir: string;
+  /**
+   * Save only images that were not on the page before Generate was clicked,
+   * before falling back to Download buttons. Clicking every Download button can
+   * save older results that are still on the page.
+   */
+  preferVisible?: boolean;
 }
 
 interface ExtractedImage {
@@ -46,6 +52,19 @@ export async function downloadGeneratedImages(
   await ensureDirectory(options.outputDir);
 
   const files: DownloadedImage[] = [];
+
+  if (options.preferVisible === true) {
+    files.push(
+      ...(await saveVisibleImages(page, logger, {
+        ...options,
+        startIndex: 1,
+      })),
+    );
+    if (files.length > 0) {
+      return files;
+    }
+  }
+
   files.push(
     ...(await clickDownloadButtons(page, config, logger, options, options.maxFiles)),
   );

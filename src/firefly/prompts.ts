@@ -5,22 +5,19 @@ export interface PromptParts {
   style?: string;
 }
 
+/**
+ * Builds the text typed into Firefly's prompt box. Style and content class are
+ * UI controls, not prompt text, so they are not appended. The result is a
+ * single line because the prompt box does not take newlines.
+ */
 export function composePrompt(parts: PromptParts): string {
   const lines = [parts.prompt.trim()];
-
-  if (parts.style !== undefined && parts.style.trim().length > 0) {
-    lines.push(`Style: ${parts.style.trim()}`);
-  }
-
-  if (parts.contentClass !== undefined && parts.contentClass.trim().length > 0) {
-    lines.push(`Content type: ${parts.contentClass.trim()}`);
-  }
 
   if (parts.negativePrompt !== undefined && parts.negativePrompt.trim().length > 0) {
     lines.push(`Avoid: ${parts.negativePrompt.trim()}`);
   }
 
-  return lines.join("\n");
+  return lines.join(" ").replace(/\s+/gu, " ").trim();
 }
 
 export function shortPromptLabel(prompt: string): string {

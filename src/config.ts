@@ -107,7 +107,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
         readString(env, "FIREFLY_REMOVE_BACKGROUND_URL") ??
         `${baseUrl}/tools/remove-background`,
       textToImage:
-        readString(env, "FIREFLY_TEXT_TO_IMAGE_URL") ?? `${baseUrl}/generate/images`,
+        readString(env, "FIREFLY_TEXT_TO_IMAGE_URL") ?? `${baseUrl}/generate/image`,
       variations: readString(env, "FIREFLY_VARIATIONS_URL") ?? baseUrl,
       video: readString(env, "FIREFLY_VIDEO_URL") ?? `${baseUrl}/generate/video`,
     },
